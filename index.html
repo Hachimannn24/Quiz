@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IT601M Prelims Quiz — Mob Sys & IAS</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080c14;
+    --surface: #0d1520;
+    --surface2: #111d2e;
+    --border: #1e3050;
+    --accent-mob: #00e5ff;
+    --accent-ias: #ff6b35;
+    --accent-green: #39ff14;
+    --text: #e8f4f8;
+    --muted: #5a7a94;
+    --correct: #39ff14;
+    --wrong: #ff2d55;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none; z-index: 0;
+  }
+  body::after {
+    content: '';
+    position: fixed; top: -200px; right: -200px;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(0,229,255,0.05) 0%, transparent 70%);
+    pointer-events: none; z-index: 0;
+  }
+  .page { position: relative; z-index: 1; display: none; min-height: 100vh; }
+  .page.active { display: flex; flex-direction: column; }
+
+  /* ===== HOME ===== */
+  #home { align-items: center; justify-content: center; padding: 40px 20px; }
+  .home-inner { max-width: 760px; width: 100%; }
+  .badge {
+    display: inline-block;
+    font-family: 'Space Mono', monospace; font-size: 11px;
+    letter-spacing: 3px; color: var(--accent-mob);
+    border: 1px solid var(--accent-mob);
+    padding: 6px 14px; margin-bottom: 24px;
+    text-transform: uppercase; animation: fadeIn 0.6s ease;
+  }
+  .home-subtitle { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: 2px; margin-bottom: 8px; animation: slideUp 0.7s ease; }
+  .home-title { font-size: clamp(38px,7vw,72px); font-weight: 800; line-height: 0.95; letter-spacing: -2px; margin-bottom: 16px; animation: slideUp 0.75s ease; }
+  .home-title .mob { color: var(--accent-mob); }
+  .home-title .ias { color: var(--accent-ias); }
+  .home-desc { font-size: 13px; color: var(--muted); line-height: 1.8; margin-bottom: 40px; font-family: 'Space Mono', monospace; max-width: 520px; animation: slideUp 0.8s ease; }
+
+  .module-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 20px; animation: slideUp 0.88s ease; }
+  .module-card { background: var(--surface); border: 1px solid var(--border); padding: 26px 22px; cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden; }
+  .module-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+  .module-card.mob::before { background: var(--accent-mob); }
+  .module-card.ias::before { background: var(--accent-ias); }
+  .module-card:hover { transform: translateY(-4px); }
+  .module-card.mob:hover { border-color: var(--accent-mob); box-shadow: 0 0 28px rgba(0,229,255,0.12); }
+  .module-card.ias:hover { border-color: var(--accent-ias); box-shadow: 0 0 28px rgba(255,107,53,0.12); }
+  .module-card.selected.mob { border-color: var(--accent-mob); background: rgba(0,229,255,0.05); }
+  .module-card.selected.ias { border-color: var(--accent-ias); background: rgba(255,107,53,0.05); }
+  .module-icon { font-size: 26px; margin-bottom: 12px; }
+  .module-name { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+  .module-card.mob .module-name { color: var(--accent-mob); }
+  .module-card.ias .module-name { color: var(--accent-ias); }
+  .module-sub { font-size: 11px; color: var(--muted); font-family: 'Space Mono', monospace; line-height: 1.7; }
+  .module-q-count { position: absolute; top: 18px; right: 18px; font-family: 'Space Mono', monospace; font-size: 11px; color: var(--muted); }
+
+  .topic-selector { background: var(--surface); border: 1px solid var(--border); padding: 22px; margin-bottom: 18px; display: none; animation: slideUp 0.3s ease; }
+  .topic-selector.visible { display: block; }
+  .topic-label { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 14px; }
+  .topic-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
+  .topic-chip { background: var(--surface2); border: 1px solid var(--border); color: var(--muted); padding: 10px 14px; font-family: 'Space Mono', monospace; font-size: 11px; cursor: pointer; transition: all 0.2s; text-align: left; }
+  .topic-chip:hover { border-color: var(--accent-mob); color: var(--text); }
+  .topic-chip.selected { border-color: var(--accent-mob); color: var(--accent-mob); background: rgba(0,229,255,0.05); }
+  .topic-chip.all-chip.selected { border-color: var(--accent-green); color: var(--accent-green); background: rgba(57,255,20,0.05); }
+
+  .start-btn { display: block; width: 100%; padding: 17px; font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; border: none; cursor: pointer; transition: all 0.3s; animation: slideUp 1s ease; }
+  .start-btn.mob-btn { background: var(--accent-mob); color: var(--bg); }
+  .start-btn.ias-btn { background: var(--accent-ias); color: var(--bg); }
+  .start-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,229,255,0.22); }
+  .start-btn.ias-btn:hover:not(:disabled) { box-shadow: 0 8px 28px rgba(255,107,53,0.22); }
+  .start-btn:disabled { opacity: 0.28; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  /* ===== QUIZ ===== */
+  #quiz { padding: 0; }
+  .quiz-header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 36px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; gap: 20px; }
+  .quiz-module-tag { font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; white-space: nowrap; }
+  .quiz-module-tag.mob { color: var(--accent-mob); }
+  .quiz-module-tag.ias { color: var(--accent-ias); }
+  .header-mid { flex: 1; min-width: 0; }
+  .topic-tag-bar { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .progress-bar-bg { background: var(--border); height: 4px; }
+  .progress-bar-fill { height: 100%; transition: width 0.5s ease; }
+  .progress-bar-fill.mob { background: var(--accent-mob); }
+  .progress-bar-fill.ias { background: var(--accent-ias); }
+  .header-right { text-align: right; white-space: nowrap; }
+  .q-counter { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); margin-bottom: 3px; }
+  .score-display { font-family: 'Space Mono', monospace; font-size: 12px; color: var(--muted); }
+  .score-display span { font-size: 20px; font-weight: 700; color: var(--accent-green); }
+
+  .quiz-body { flex: 1; display: flex; align-items: flex-start; justify-content: center; padding: 50px 18px 80px; }
+  .question-card { max-width: 720px; width: 100%; }
+  .q-meta { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+  .q-number { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--muted); }
+  .q-topic-pill { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; padding: 3px 10px; border: 1px solid var(--border); color: var(--muted); }
+  .q-text { font-size: clamp(17px,2.6vw,25px); font-weight: 700; line-height: 1.38; margin-bottom: 34px; letter-spacing: -0.3px; }
+
+  .options { display: grid; gap: 11px; }
+  .option-btn { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 15px 20px; text-align: left; font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.22s; display: flex; align-items: flex-start; gap: 14px; line-height: 1.5; }
+  .option-letter { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); min-width: 16px; transition: color 0.22s; padding-top: 2px; }
+  .option-btn:hover:not(:disabled) { border-color: var(--accent-mob); background: rgba(0,229,255,0.04); transform: translateX(4px); }
+  .option-btn.ias-opt:hover:not(:disabled) { border-color: var(--accent-ias); background: rgba(255,107,53,0.04); }
+  .option-btn.correct { border-color: var(--correct); background: rgba(57,255,20,0.07); color: var(--correct); }
+  .option-btn.correct .option-letter { color: var(--correct); }
+  .option-btn.wrong { border-color: var(--wrong); background: rgba(255,45,85,0.07); color: var(--wrong); }
+  .option-btn.wrong .option-letter { color: var(--wrong); }
+  .option-btn:disabled { cursor: default; }
+
+  .feedback-bar { margin-top: 24px; padding: 13px 18px; font-family: 'Space Mono', monospace; font-size: 12px; line-height: 1.65; display: none; gap: 12px; border: 1px solid; animation: slideUp 0.3s ease; }
+  .feedback-bar.show { display: flex; align-items: flex-start; }
+  .feedback-bar.correct-fb { border-color: var(--correct); color: var(--correct); background: rgba(57,255,20,0.04); }
+  .feedback-bar.wrong-fb { border-color: var(--wrong); color: var(--wrong); background: rgba(255,45,85,0.04); }
+  .fb-icon { min-width: 14px; }
+  .fb-text { color: var(--text); }
+  .fb-text strong { color: inherit; }
+
+  .next-btn { display: none; margin-top: 18px; padding: 13px 30px; font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; border: none; cursor: pointer; transition: all 0.3s; float: right; }
+  .next-btn.show { display: block; }
+  .next-btn.mob { background: var(--accent-mob); color: var(--bg); }
+  .next-btn.ias { background: var(--accent-ias); color: var(--bg); }
+  .next-btn:hover { opacity: 0.85; transform: translateY(-2px); }
+  .clearfix::after { content: ''; display: table; clear: both; }
+
+  /* ===== RESULT ===== */
+  #result { align-items: center; justify-content: center; padding: 40px 20px; }
+  .result-inner { max-width: 640px; width: 100%; text-align: center; }
+  .result-ring { width: 170px; height: 170px; margin: 0 auto 30px; position: relative; }
+  .result-ring svg { transform: rotate(-90deg); }
+  .result-ring circle { fill: none; stroke-width: 8; stroke-linecap: round; }
+  .ring-bg { stroke: var(--border); }
+  .ring-fill { transition: stroke-dashoffset 1.3s cubic-bezier(0.4,0,0.2,1); }
+  .ring-label { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .ring-score { font-size: 40px; font-weight: 800; letter-spacing: -1px; }
+  .ring-total { font-family: 'Space Mono', monospace; font-size: 12px; color: var(--muted); }
+  .result-module-tag { font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 3px; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; }
+  .result-topic-tag { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 2px; color: var(--muted); margin-bottom: 18px; text-transform: uppercase; opacity: 0.7; }
+  .result-grade { font-size: clamp(30px,5vw,52px); font-weight: 800; letter-spacing: -1.5px; margin-bottom: 10px; }
+  .result-message { font-size: 12px; color: var(--muted); font-family: 'Space Mono', monospace; line-height: 1.9; margin-bottom: 32px; }
+  .result-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 28px; }
+  .stat-box { background: var(--surface); border: 1px solid var(--border); padding: 18px 12px; }
+  .stat-val { font-size: 30px; font-weight: 800; margin-bottom: 4px; }
+  .stat-label { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+  .stat-box.correct-s .stat-val { color: var(--correct); }
+  .stat-box.wrong-s .stat-val { color: var(--wrong); }
+
+  .review-toggle { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 11px 18px; font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; width: 100%; margin-bottom: 14px; transition: all 0.2s; }
+  .review-toggle:hover { border-color: var(--text); color: var(--text); }
+  .review-list { display: none; text-align: left; margin-bottom: 22px; max-height: 420px; overflow-y: auto; }
+  .review-list.open { display: block; }
+  .review-item { border: 1px solid var(--border); padding: 15px 16px; margin-bottom: 8px; font-size: 13px; }
+  .review-item.r-correct { border-left: 3px solid var(--correct); }
+  .review-item.r-wrong { border-left: 3px solid var(--wrong); }
+  .review-q { font-weight: 700; margin-bottom: 8px; line-height: 1.4; }
+  .review-your { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--wrong); margin-bottom: 4px; }
+  .review-correct-ans { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--correct); margin-bottom: 6px; }
+  .review-explain { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--muted); line-height: 1.65; }
+
+  .result-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .action-btn { padding: 15px; font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; border: none; cursor: pointer; transition: all 0.3s; }
+  .action-btn.primary-mob { background: var(--accent-mob); color: var(--bg); }
+  .action-btn.primary-ias { background: var(--accent-ias); color: var(--bg); }
+  .action-btn.secondary { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .action-btn:hover { opacity: 0.85; transform: translateY(-2px); }
+  .action-btn.secondary:hover { border-color: var(--text); }
+
+  @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+  @keyframes slideUp { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
+
+  @media (max-width:600px) {
+    .module-cards { grid-template-columns:1fr; }
+    .quiz-header { padding:12px 14px; flex-wrap:wrap; }
+    .quiz-body { padding:30px 14px 60px; }
+    .topic-grid { grid-template-columns:1fr 1fr; }
+    .result-actions { grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<div class="page active" id="home">
+  <div class="home-inner">
+    <div class="badge">// IT601M Prelims Reviewer</div>
+    <div class="home-subtitle">MOBILE APPLICATIONS DEVELOPMENT</div>
+    <h1 class="home-title"><span class="mob">Mob</span> Sys<br>&amp; <span class="ias">IAS</span> Quiz</h1>
+    <p class="home-desc">Pick a module, choose your topic, and challenge yourself.<br>Instant feedback + full answer review included.</p>
+
+    <div class="module-cards">
+      <div class="module-card mob" onclick="selectModule('mob')">
+        <span class="module-q-count" id="mobCount">— Qs</span>
+        <div class="module-icon">📱</div>
+        <div class="module-name">Mob Sys</div>
+        <div class="module-sub">Benefits · IDEs · Challenges · Workflow · Android Basics · Manifest File</div>
+      </div>
+      <div class="module-card ias" onclick="selectModule('ias')">
+        <span class="module-q-count" id="iasCount">5 Qs</span>
+        <div class="module-icon">🔐</div>
+        <div class="module-name">IAS</div>
+        <div class="module-sub">CIA Triad · Encryption · Authentication · Attacks & Threats</div>
+      </div>
+    </div>
+
+    <div class="topic-selector" id="topicSelector">
+      <div class="topic-label">// Select Topic — Mob Sys</div>
+      <div class="topic-grid" id="topicGrid"></div>
+    </div>
+
+    <button class="start-btn mob-btn" id="startBtn" disabled onclick="startQuiz()">Select a Module to Start →</button>
+  </div>
+</div>
+
+<!-- QUIZ -->
+<div class="page" id="quiz">
+  <div class="quiz-header">
+    <div class="quiz-module-tag mob" id="quizModuleTag">MOB SYS</div>
+    <div class="header-mid">
+      <div class="topic-tag-bar" id="topicTagBar">All Topics</div>
+      <div class="progress-bar-bg"><div class="progress-bar-fill mob" id="progressFill" style="width:0%"></div></div>
+    </div>
+    <div class="header-right">
+      <div class="q-counter" id="qCounter">1 / 10</div>
+      <div class="score-display">Score: <span id="liveScore">0</span></div>
+    </div>
+  </div>
+  <div class="quiz-body">
+    <div class="question-card" id="questionCard">
+      <div class="q-meta">
+        <div class="q-number" id="qNumber">Q.01</div>
+        <div class="q-topic-pill" id="qTopicPill">Topic</div>
+      </div>
+      <div class="q-text" id="qText"></div>
+      <div class="options" id="optionsContainer"></div>
+      <div class="feedback-bar" id="feedbackBar">
+        <span class="fb-icon" id="feedbackIcon">✓</span>
+        <span class="fb-text" id="feedbackText"></span>
+      </div>
+      <div class="clearfix">
+        <button class="next-btn mob" id="nextBtn" onclick="nextQuestion()">Next →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div class="page" id="result">
+  <div class="result-inner">
+    <div class="result-ring">
+      <svg width="170" height="170" viewBox="0 0 170 170">
+        <circle class="ring-bg" cx="85" cy="85" r="74"/>
+        <circle class="ring-fill" id="ringFill" cx="85" cy="85" r="74" stroke-dasharray="464.96" stroke-dashoffset="464.96"/>
+      </svg>
+      <div class="ring-label">
+        <div class="ring-score" id="ringScore">0</div>
+        <div class="ring-total" id="ringTotal">/ 10</div>
+      </div>
+    </div>
+    <div class="result-module-tag" id="resultModuleTag">MOB SYS</div>
+    <div class="result-topic-tag" id="resultTopicTag"></div>
+    <div class="result-grade" id="resultGrade">Great Job!</div>
+    <div class="result-message" id="resultMessage"></div>
+    <div class="result-stats">
+      <div class="stat-box correct-s"><div class="stat-val" id="statCorrect">0</div><div class="stat-label">Correct</div></div>
+      <div class="stat-box wrong-s"><div class="stat-val" id="statWrong">0</div><div class="stat-label">Wrong</div></div>
+      <div class="stat-box"><div class="stat-val" id="statPct" style="color:var(--accent-mob)">0%</div><div class="stat-label">Score</div></div>
+    </div>
+    <button class="review-toggle" id="reviewToggle" onclick="toggleReview()">▼ Show Answer Review</button>
+    <div class="review-list" id="reviewList"></div>
+    <div class="result-actions">
+      <button class="action-btn primary-mob" id="retryBtn" onclick="retryQuiz()">Retry Quiz</button>
+      <button class="action-btn secondary" onclick="goHome()">← Change Module</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const TOPICS = {
+  mob: {
+    "App Benefits": [
+      { q: "What benefit of mobile apps allows users to access and share information anytime or anywhere without needing an internet connection?", options: ["Personalization","Convenience","Productivity","Connectivity"], answer: 1, explain: "Convenience enables offline access and info sharing regardless of location or connectivity." },
+      { q: "What benefit allows users to change app settings based on preferences and receive real-time notifications?", options: ["Productivity","Security","Personalization","Convenience"], answer: 2, explain: "Personalization lets users customize settings and receive tailored, real-time notifications." },
+      { q: "What benefit enables users to write, read, and present reports using only their mobile phones?", options: ["Personalization","Convenience","Mobility","Productivity"], answer: 3, explain: "Productivity apps enable professional tasks like writing, reading, and presenting reports on mobile devices." }
+    ],
+    "Development Environments": [
+      { q: "What is an IDE?", options: ["A device for testing apps on physical hardware","A programming environment packaged as an application program","A cloud service for storing compiled app packages","A scripting language for cross-platform development"], answer: 1, explain: "An IDE (Integrated Development Environment) bundles a code editor, compiler, debugger, and more into one application." },
+      { q: "Which of the following is NOT a typical component of an IDE?", options: ["Code editor","Compiler","GUI builder","Database administrator"], answer: 3, explain: "A typical IDE includes a code editor, compiler, debugger, and GUI builder — not a database administrator." },
+      { q: "What is the official IDE for Android application development, and what is it based on?", options: ["Eclipse; based on NetBeans","Xcode; based on Swift Playgrounds","Android Studio; based on IntelliJ IDEA","Visual Studio; based on .NET"], answer: 2, explain: "Android Studio is the official Android IDE, built on JetBrains' IntelliJ IDEA (a Java IDE)." },
+      { q: "What IDE allows users to build apps and run them directly on Apple devices?", options: ["Android Studio","Xamarin","Xcode","Corona SDK"], answer: 2, explain: "Xcode is Apple's official IDE that lets developers build and run apps on Apple devices." },
+      { q: "What programming language does Xcode use, and who created it?", options: ["Kotlin, created by JetBrains","Lua, created by PUC-Rio","Swift, created by Apple","Dart, created by Google"], answer: 2, explain: "Xcode uses Swift, a language created by Apple for iOS, OS X, and watchOS development." },
+      { q: "What development environment extends the .NET developer platform with tools and libraries for building cross-platform apps?", options: ["Apache Cordova","Xamarin","Corona","React Native"], answer: 1, explain: "Xamarin extends the .NET platform with tools and libraries for building cross-platform mobile apps." },
+      { q: "What is Corona, and what scripting language does it use?", options: ["A paid IDE for iOS; uses Swift","A free, cross-platform framework for mobile apps and games; uses Lua","An open-source Android emulator; uses Java","A Microsoft tool for .NET mobile apps; uses C#"], answer: 1, explain: "Corona is a free, cross-platform framework ideal for mobile apps and games, powered by the Lua scripting language." },
+      { q: "What open-source mobile development framework allows the use of HTML5, CSS3, and JavaScript for cross-platform development?", options: ["Xamarin","Flutter","Apache Cordova","Corona SDK"], answer: 2, explain: "Apache Cordova is an open-source framework enabling cross-platform development using web technologies: HTML5, CSS3, and JavaScript." }
+    ],
+    "Challenges": [
+      { q: "What challenge requires studying the current market scenario and addressing the needs of target users?", options: ["Supporting multiple screen types","Understanding the market and the user","Maximizing app performance","Securing users"], answer: 1, explain: "Understanding the market and user requires market research and identifying the target audience's specific needs." },
+      { q: "What challenge arises because devices come in different sizes and shapes, affecting the design of screens and UI elements?", options: ["Maximizing app performance","Securing users","Supporting multiple screen types","Remaining compatible with older versions"], answer: 2, explain: "Supporting multiple screen types is a challenge because devices vary in size and shape, requiring adaptive UI design." },
+      { q: "What challenge involves factors such as battery life, multimedia content, and internet access?", options: ["Understanding the market","Supporting multiple screen types","Securing users","Maximizing app performance"], answer: 3, explain: "Maximizing app performance addresses constraints like battery life, multimedia handling, and network access management." },
+      { q: "What challenge involves protecting users' sensitive information, which is considered the most valuable asset?", options: ["Maximizing app performance","Securing users","Remaining compatible with older versions","Supporting multiple screen types"], answer: 1, explain: "Securing users focuses on safeguarding sensitive personal data, considered the most valuable user asset." },
+      { q: "What challenge exists because not all users may have upgraded or may be able to upgrade their devices?", options: ["Securing users","Maximizing app performance","Understanding the market","Remaining compatible with older versions"], answer: 3, explain: "Backward compatibility is challenging because many users retain older, non-upgradeable devices and OS versions." }
+    ],
+    "App Development Workflow": [
+      { q: "In which development phase do you install and set up your chosen IDE, create an emulator, and connect hardware devices?", options: ["Development","Setup","Building and Running","Publishing"], answer: 1, explain: "The Setup phase involves installing the IDE, configuring emulators, and connecting physical devices." },
+      { q: "In which phase do you write code, design a UI, and create resources for different device types?", options: ["Setup","Building and Running","Development","Debugging and Testing"], answer: 2, explain: "The Development phase is where you write code, design your UI, and create resources for various device configurations." },
+      { q: "In which phase do you build your project into a package that can be installed and run on an emulator or Android-powered device?", options: ["Development","Setup","Publishing","Building and Running"], answer: 3, explain: "The Building and Running phase compiles and packages the app for installation on emulators or real Android devices." },
+      { q: "In which phase do you focus on eliminating bugs and optimizing app performance through profiling?", options: ["Setup","Development","Publishing","Debugging, Profiling, and Testing"], answer: 3, explain: "The Debugging, Profiling, and Testing phase targets bug elimination and performance optimization." },
+      { q: "In which development phase is the app configured, built for release, and distributed to users?", options: ["Debugging and Testing","Building and Running","Development","Publishing"], answer: 3, explain: "The Publishing phase prepares the final release build and distributes it to end users." }
+    ],
+    "Android Basics": [
+      { q: "What programming language is close to C# and Java, making it easy for programmers to switch between them?", options: ["Swift","Kotlin","C++","Lua"], answer: 2, explain: "C++ shares syntactic similarities with C# and Java, making transitions easier for developers from those backgrounds." },
+      { q: "What makes C++ appealing to developers who already know C# or Java?", options: ["C++ runs faster than all other mobile languages","C++ is close to C# and Java, making it easy for programmers to switch to C++ or vice versa","C++ is the only language supported by all mobile IDEs","C++ eliminates the need for a compiler"], answer: 1, explain: "C++ is syntactically close to both C# and Java, which lowers the learning curve for developers switching between them." },
+      { q: "What programming language is widely used in enterprise applications and is commonly used alongside C++ in Android development?", options: ["Swift","Kotlin","Lua","Java"], answer: 3, explain: "Java has long been a staple of enterprise development and was the original primary language for Android app development." },
+      { q: "What programming language is used in Xamarin for building cross-platform mobile apps and is part of the .NET developer platform?", options: ["Java","Kotlin","C#","Swift"], answer: 2, explain: "Xamarin uses C#, which is part of Microsoft's .NET developer platform, to build cross-platform mobile apps." },
+      { q: "What language did Apple create specifically for iOS, OS X, and watchOS development?", options: ["Kotlin","Java","Dart","Swift"], answer: 3, explain: "Apple created Swift as a modern, safe, and expressive language specifically for iOS, OS X, and watchOS." },
+      { q: "What is the official programming language for iOS development?", options: ["Kotlin","Java","Swift","Dart"], answer: 2, explain: "Swift is Apple's official programming language for iOS, OS X, and watchOS development." },
+      { q: "What programming language combines object-oriented and functional programming features?", options: ["Java","C++","Swift","Kotlin"], answer: 3, explain: "Kotlin blends object-oriented and functional programming paradigms and is officially supported for Android." },
+      { q: "What two programming paradigms does Kotlin combine?", options: ["Procedural and declarative programming","Structural and event-driven programming","Object-oriented and functional programming","Imperative and logic programming"], answer: 2, explain: "Kotlin merges object-oriented programming (classes, objects) and functional programming (lambdas, higher-order functions)." },
+      { q: "Which of the following correctly lists the programming languages used in Android app development?", options: ["HTML, CSS, JavaScript, and Python","C++, Swift, Kotlin, Java, and C#","Ruby, Go, Rust, and Dart only","Java and Kotlin only"], answer: 1, explain: "Android development supports multiple languages: C++, Swift (for iOS context), Kotlin, Java, and C# (via Xamarin)." },
+      { q: "What are the two keywords Kotlin uses to declare variables, and what do they mean?", options: ["`let` (never changes) and `var` (can change)","`val` (never changes) and `var` (can change)","`const` (never changes) and `let` (can change)","`val` (can change) and `var` (never changes)"], answer: 1, explain: "In Kotlin, `val` is immutable (read-only) and `var` is mutable (can be reassigned)." },
+      { q: "Which keyword in Kotlin is used to declare a variable whose value NEVER changes?", options: ["`var`","`let`","`val`","`const`"], answer: 2, explain: "`val` in Kotlin declares a read-only (immutable) variable — once assigned, its value cannot be changed." },
+      { q: "Which keyword in Kotlin is used to declare a variable whose value CAN change?", options: ["`val`","`let`","`const`","`var`"], answer: 3, explain: "`var` in Kotlin declares a mutable variable whose value can be reassigned at any time." },
+      { q: "What app component serves as the entry point for interacting with the user and represents a single screen with a UI?", options: ["Service","Broadcast Receiver","Content Provider","Activity"], answer: 3, explain: "An Activity represents a single screen with a user interface and is the main entry point for user interaction." },
+      { q: "Which Android app component runs in the background to perform long-running operations or work for remote processes?", options: ["Activity","Intent","Service","Content Provider"], answer: 2, explain: "A Service runs in the background (e.g., playing music) without a visible UI, handling long-running or remote tasks." },
+      { q: "What app component enables the system to deliver events outside of a regular user flow, allowing the app to respond to system-wide broadcast announcements?", options: ["Service","Content Provider","Activity","Broadcast Receiver"], answer: 3, explain: "A Broadcast Receiver listens for system-wide events (like low battery) and responds outside the normal app flow." },
+      { q: "What app component manages a shared set of app data that can be stored and accessed by your app or other apps?", options: ["Activity","Service","Intent","Content Provider"], answer: 3, explain: "A Content Provider manages shared data (like contacts) queryable and modifiable by other apps via a standard interface." },
+      { q: "What is an Intent in Android development?", options: ["A background process that handles long-running tasks","A configuration file that lists app permissions","A message described by an Intent object that describes an action to perform","A UI component that represents a single screen"], answer: 2, explain: "An Intent is a messaging object describing an action to perform — used to start activities, services, or deliver broadcasts." },
+      { q: "Which is the best example of a Broadcast Receiver use case?", options: ["An activity that displays a list of new emails","Playing music in the background while using another app","A broadcast indicating the battery is low","A content provider managing user contact information"], answer: 2, explain: "A low-battery broadcast is a classic Broadcast Receiver use case — reacting to a system-wide announcement." }
+    ],
+    "Manifest File": [
+      { q: "What file details the components that exist in an Android app?", options: ["build.gradle","strings.xml","MainActivity.java","AndroidManifest.xml"], answer: 3, explain: "The AndroidManifest.xml declares all app components to the Android system." },
+      { q: "What is the root element of the AndroidManifest.xml file?", options: ["The <application> element","The <activity> element","The <manifest> element","The <intent-filter> element"], answer: 2, explain: "The <manifest> element is the required root element of the AndroidManifest.xml file." },
+      { q: "What element in AndroidManifest.xml contains sub-elements that declare each application component and has attributes that affect all components?", options: ["The <intent-filter> element","The <manifest> element","The <action> element","The <application> element"], answer: 3, explain: "The <application> element holds all component sub-elements and sets global attributes affecting all components." },
+      { q: "What are the two required elements in the manifest file, and how many times should each occur?", options: ["<activity> and <service>; each can appear multiple times","<manifest> and <application>; each should occur only once","<intent-filter> and <action>; each should occur once","<manifest> and <activity>; <activity> can appear multiple times"], answer: 1, explain: "Only <manifest> and <application> are required in the manifest file, each appearing exactly once." },
+      { q: "Where must the <application> element be placed inside the <manifest> element?", options: ["It must be the first element inside <manifest>","It can appear anywhere within <manifest>","It must be the last element inside <manifest>","It must appear before <uses-permission> elements"], answer: 2, explain: "The <application> element must be the last element placed inside the <manifest> element." },
+      { q: "What do the icon and label set in the <application> element serve as?", options: ["The launcher icon and app version string","The default icon and label for each of the app's components","The splash screen image and app description","The notification icon and toast message text"], answer: 1, explain: "The icon and label in <application> are inherited as the default icon and label by all app components." },
+      { q: "What element specifies the types of intents that an activity, service, or broadcast receiver can respond to?", options: ["The <action> element","The <category> element","The <uses-permission> element","The <intent-filter> element"], answer: 3, explain: "The <intent-filter> element declares the intent types a component can handle, enabling the system to route them correctly." },
+      { q: "What does the <action> element do within an intent filter?", options: ["It adds a category name to an intent filter","It specifies required permissions for a component","It adds an action to an intent filter","It declares a new application component"], answer: 2, explain: "The <action> element adds a specific action (e.g., android.intent.action.MAIN) to an intent filter." },
+      { q: "What does the <category> element do within an intent filter?", options: ["It adds an action to an intent filter","It sets the default icon for the component","It adds a category name to an intent filter","It declares the app's target SDK version"], answer: 2, explain: "The <category> element adds a category name (e.g., android.intent.category.LAUNCHER) to an intent filter, describing how the component can be used." }
+    ]
+  },
+  ias: {
+    "Security Fundamentals": [
+      { q: "Which of the following best describes the CIA Triad in Information Security?", options: ["Cryptography, Identification, Authentication","Control, Isolation, Access","Confidentiality, Integrity, Availability","Cyber, Intelligence, Analysis"], answer: 2, explain: "The CIA Triad — Confidentiality, Integrity, and Availability — is the foundational model of information security." },
+      { q: "What type of attack involves intercepting communication between two parties without their knowledge?", options: ["Phishing","SQL Injection","DoS Attack","Man-in-the-Middle (MitM)"], answer: 3, explain: "A Man-in-the-Middle (MitM) attack secretly intercepts and possibly alters communication between two unsuspecting parties." },
+      { q: "Which encryption standard replaced DES as the US federal standard in 2001?", options: ["3DES","RSA","Blowfish","AES"], answer: 3, explain: "AES (Advanced Encryption Standard) was adopted in 2001, replacing the vulnerable DES algorithm." },
+      { q: "What is the purpose of a digital signature?", options: ["To encrypt the entire message payload","To compress data for faster transmission","To verify the sender's identity and ensure message integrity","To anonymize user traffic across networks"], answer: 2, explain: "Digital signatures authenticate the sender and confirm the message has not been tampered with." },
+      { q: "Which of the following is an example of a social engineering attack?", options: ["Buffer Overflow","SQL Injection","Cross-Site Scripting (XSS)","Phishing Email"], answer: 3, explain: "Phishing is a social engineering attack that psychologically manipulates users into revealing sensitive information." }
+    ]
+  }
+};
+
+// ===== STATE =====
+let currentModule = null;
+let selectedTopic = 'all';
+let quizQuestions = [];
+let currentQ = 0;
+let score = 0;
+let answered = false;
+let userAnswers = [];
+// Map question obj → topic string
+let questionTopicMap = new Map();
+
+function buildUI() {
+  let mobTotal = 0;
+  Object.values(TOPICS.mob).forEach(arr => mobTotal += arr.length);
+  document.getElementById('mobCount').textContent = `${mobTotal} Qs`;
+  let iasTotal = 0;
+  Object.values(TOPICS.ias).forEach(arr => iasTotal += arr.length);
+  document.getElementById('iasCount').textContent = `${iasTotal} Qs`;
+}
+buildUI();
+
+function selectModule(mod) {
+  currentModule = mod;
+  selectedTopic = 'all';
+  document.querySelectorAll('.module-card').forEach(c => c.classList.remove('selected'));
+  document.querySelector(`.module-card.${mod}`).classList.add('selected');
+
+  const topicSel = document.getElementById('topicSelector');
+  const topicGrid = document.getElementById('topicGrid');
+
+  if (mod === 'mob') {
+    topicSel.classList.add('visible');
+    topicGrid.innerHTML = '';
+    const allChip = document.createElement('button');
+    allChip.className = 'topic-chip all-chip selected';
+    allChip.textContent = '★ All Topics';
+    allChip.onclick = () => pickTopic('all', allChip);
+    topicGrid.appendChild(allChip);
+    Object.entries(TOPICS.mob).forEach(([name, qs]) => {
+      const chip = document.createElement('button');
+      chip.className = 'topic-chip';
+      chip.textContent = `${name} (${qs.length})`;
+      chip.onclick = () => pickTopic(name, chip);
+      topicGrid.appendChild(chip);
+    });
+  } else {
+    topicSel.classList.remove('visible');
+    selectedTopic = 'all';
+  }
+  updateStartButton();
+}
+
+function pickTopic(topic, el) {
+  selectedTopic = topic;
+  document.querySelectorAll('.topic-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  updateStartButton();
+}
+
+function buildQuestionSet() {
+  questionTopicMap = new Map();
+  if (currentModule === 'ias') {
+    let all = [];
+    Object.entries(TOPICS.ias).forEach(([t, arr]) => arr.forEach(q => { questionTopicMap.set(q, t); all.push(q); }));
+    return all;
+  }
+  if (selectedTopic === 'all') {
+    let all = [];
+    Object.entries(TOPICS.mob).forEach(([t, arr]) => arr.forEach(q => { questionTopicMap.set(q, t); all.push(q); }));
+    return all;
+  }
+  const arr = TOPICS.mob[selectedTopic] || [];
+  arr.forEach(q => questionTopicMap.set(q, selectedTopic));
+  return arr;
+}
+
+function updateStartButton() {
+  const btn = document.getElementById('startBtn');
+  const questions = buildQuestionSet();
+  const count = questions.length;
+  btn.disabled = false;
+  if (currentModule === 'mob') {
+    btn.className = 'start-btn mob-btn';
+    const label = selectedTopic === 'all' ? 'All Topics' : selectedTopic;
+    btn.textContent = `Start Mob Sys — ${label} (${count} Qs) →`;
+  } else {
+    btn.className = 'start-btn ias-btn';
+    btn.textContent = `Start IAS Quiz (${count} Qs) →`;
+  }
+}
+
+function startQuiz() {
+  quizQuestions = buildQuestionSet();
+  currentQ = 0; score = 0; answered = false; userAnswers = [];
+  showPage('quiz');
+  setupQuizHeader();
+  loadQuestion();
+}
+
+function setupQuizHeader() {
+  const mod = currentModule;
+  const tag = document.getElementById('quizModuleTag');
+  tag.textContent = mod === 'mob' ? 'MOB SYS' : 'IAS';
+  tag.className = `quiz-module-tag ${mod}`;
+  document.getElementById('progressFill').className = `progress-bar-fill ${mod}`;
+  document.getElementById('nextBtn').className = `next-btn ${mod}`;
+  const topicBar = document.getElementById('topicTagBar');
+  if (mod === 'mob') {
+    topicBar.textContent = selectedTopic === 'all' ? 'All Topics' : `Topic: ${selectedTopic}`;
+  } else {
+    topicBar.textContent = 'Information Assurance & Security';
+  }
+  document.getElementById('liveScore').textContent = '0';
+}
+
+function loadQuestion() {
+  const total = quizQuestions.length;
+  const q = quizQuestions[currentQ];
+  answered = false;
+  document.getElementById('progressFill').style.width = `${(currentQ / total) * 100}%`;
+  document.getElementById('qCounter').textContent = `${currentQ + 1} / ${total}`;
+  document.getElementById('qNumber').textContent = `Q.${String(currentQ + 1).padStart(2, '0')}`;
+  document.getElementById('qText').textContent = q.q;
+  document.getElementById('qTopicPill').textContent = questionTopicMap.get(q) || '';
+
+  const container = document.getElementById('optionsContainer');
+  container.innerHTML = '';
+  const letters = ['A','B','C','D'];
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = `option-btn ${currentModule === 'ias' ? 'ias-opt' : ''}`;
+    btn.innerHTML = `<span class="option-letter">${letters[i]}</span>${opt}`;
+    btn.onclick = () => selectAnswer(i, q);
+    container.appendChild(btn);
+  });
+
+  document.getElementById('feedbackBar').className = 'feedback-bar';
+  document.getElementById('nextBtn').classList.remove('show');
+
+  const card = document.getElementById('questionCard');
+  card.style.animation = 'none';
+  void card.offsetHeight;
+  card.style.animation = 'slideUp 0.35s ease';
+}
+
+function selectAnswer(selected, q) {
+  if (answered) return;
+  answered = true;
+  const correct = q.answer;
+  const isCorrect = selected === correct;
+  if (isCorrect) score++;
+  userAnswers.push({ q: q.q, selected, correct, options: q.options, explain: q.explain, isCorrect, topic: questionTopicMap.get(q) || '' });
+  document.getElementById('liveScore').textContent = score;
+
+  document.querySelectorAll('.option-btn').forEach((btn, i) => {
+    btn.disabled = true;
+    if (i === correct) btn.classList.add('correct');
+    else if (i === selected) btn.classList.add('wrong');
+  });
+
+  const fb = document.getElementById('feedbackBar');
+  const icon = document.getElementById('feedbackIcon');
+  const text = document.getElementById('feedbackText');
+  if (isCorrect) {
+    fb.className = 'feedback-bar show correct-fb';
+    icon.textContent = '✓';
+    text.innerHTML = `<strong>Correct!</strong> ${q.explain}`;
+  } else {
+    fb.className = 'feedback-bar show wrong-fb';
+    icon.textContent = '✗';
+    text.innerHTML = `<strong>Incorrect.</strong> ${q.explain}`;
+  }
+  const nextBtn = document.getElementById('nextBtn');
+  nextBtn.classList.add('show');
+  nextBtn.textContent = (currentQ + 1 >= quizQuestions.length) ? 'View Results →' : 'Next →';
+}
+
+function nextQuestion() {
+  currentQ++;
+  if (currentQ >= quizQuestions.length) showResults();
+  else loadQuestion();
+}
+
+function showResults() {
+  showPage('result');
+  document.getElementById('reviewList').className = 'review-list';
+  document.getElementById('reviewToggle').textContent = '▼ Show Answer Review';
+
+  const total = quizQuestions.length;
+  const pct = Math.round((score / total) * 100);
+  const circumference = 464.96;
+  const ring = document.getElementById('ringFill');
+  ring.style.stroke = pct >= 60 ? '#39ff14' : (pct >= 40 ? (currentModule === 'mob' ? '#00e5ff' : '#ff6b35') : '#ff2d55');
+  setTimeout(() => { ring.style.strokeDashoffset = circumference - (pct / 100) * circumference; }, 100);
+
+  document.getElementById('ringScore').textContent = score;
+  document.getElementById('ringTotal').textContent = `/ ${total}`;
+  document.getElementById('resultModuleTag').textContent = currentModule === 'mob' ? 'MOB SYS MODULE' : 'IAS MODULE';
+
+  const topicTag = document.getElementById('resultTopicTag');
+  topicTag.textContent = currentModule === 'mob'
+    ? (selectedTopic === 'all' ? 'All Topics' : `Topic: ${selectedTopic}`)
+    : 'Information Assurance & Security';
+
+  const grade = document.getElementById('resultGrade');
+  const msg = document.getElementById('resultMessage');
+  const accent = currentModule === 'mob' ? '#00e5ff' : '#ff6b35';
+
+  if (pct === 100) { grade.textContent = 'Perfect Score! 🎯'; grade.style.color = '#39ff14'; msg.textContent = 'Flawless! Every answer correct. You are fully prepared!'; }
+  else if (pct >= 80) { grade.textContent = 'Excellent! 🚀'; grade.style.color = '#39ff14'; msg.textContent = 'Outstanding! You have a strong command of the material.'; }
+  else if (pct >= 60) { grade.textContent = 'Good Job! 👍'; grade.style.color = accent; msg.textContent = 'Solid effort! Review the missed items and you will ace it.'; }
+  else if (pct >= 40) { grade.textContent = 'Keep Going! 💪'; grade.style.color = accent; msg.textContent = 'You are on the right track. Review the missed topics and try again.'; }
+  else { grade.textContent = 'Needs Work! 📚'; grade.style.color = '#ff2d55'; msg.textContent = 'Do not give up! Study the module content carefully and retry.'; }
+
+  document.getElementById('statCorrect').textContent = score;
+  document.getElementById('statWrong').textContent = total - score;
+  document.getElementById('statPct').textContent = `${pct}%`;
+  document.getElementById('statPct').style.color = accent;
+  document.getElementById('retryBtn').className = `action-btn primary-${currentModule}`;
+  buildReview();
+}
+
+function buildReview() {
+  const list = document.getElementById('reviewList');
+  list.innerHTML = '';
+  const letters = ['A','B','C','D'];
+  userAnswers.forEach((ua, idx) => {
+    const item = document.createElement('div');
+    item.className = `review-item ${ua.isCorrect ? 'r-correct' : 'r-wrong'}`;
+    let html = `<div class="review-q">${idx + 1}. ${ua.q}</div>`;
+    if (!ua.isCorrect) {
+      html += `<div class="review-your">✗ Your answer: ${letters[ua.selected]}. ${ua.options[ua.selected]}</div>`;
+    }
+    html += `<div class="review-correct-ans">✓ Correct: ${letters[ua.correct]}. ${ua.options[ua.correct]}</div>`;
+    html += `<div class="review-explain">${ua.explain}</div>`;
+    item.innerHTML = html;
+    list.appendChild(item);
+  });
+}
+
+function toggleReview() {
+  const list = document.getElementById('reviewList');
+  const btn = document.getElementById('reviewToggle');
+  list.classList.toggle('open');
+  btn.textContent = list.classList.contains('open') ? '▲ Hide Answer Review' : '▼ Show Answer Review';
+}
+
+function retryQuiz() { startQuiz(); }
+
+function goHome() {
+  currentModule = null; selectedTopic = 'all';
+  document.querySelectorAll('.module-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('topicSelector').classList.remove('visible');
+  const btn = document.getElementById('startBtn');
+  btn.disabled = true;
+  btn.className = 'start-btn mob-btn';
+  btn.textContent = 'Select a Module to Start →';
+  showPage('home');
+}
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+</script>
+</body>
+</html>
